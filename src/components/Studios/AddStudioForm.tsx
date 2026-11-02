@@ -97,12 +97,25 @@ export default function AddStudioForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (form.amenities.length === 0) {
+        if (form.amenities.length === 0) {
       toast.error("Select at least one amenity.");
       return;
     }
 
     setSubmitting(true);
+
+    const res = await fetch("http://localhost:8000/add-studio", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(form),
+    });
+
+    const data = await res.json();
+    console.log(data);
+
+
 
     try {
       // UI demo only: connect your Express API here.
