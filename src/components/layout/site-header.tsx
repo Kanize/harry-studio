@@ -3,7 +3,7 @@
 
 import { Suspense, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Aperture,
   LogIn,
@@ -11,14 +11,16 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 
+import UserMenu from "@/components/layout/UserMenu";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/utils";
+import { authClient } from "@/lib/auth-client";
 
 const navLinks = [
   { label: "Home", href: "/" },
   { label: "Explore Studios", href: "/studios" },
-  { label: "Add Studio", href: "/addStudio" },
   { label: "How It Works", href: "/#how-it-works" },
   { label: "About Us", href: "/#about" },
 ] as const;
@@ -46,11 +48,47 @@ function HeaderFallback() {
 
 function HeaderContent() {
   const pathname = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
 
-  function closeMenu() {
+  return <HeaderNavigation key={pathname} pathname={pathname} />;
+}
+
+function HeaderNavigation({ pathname }: { pathname: string }) {
+  const router = useRouter();
+
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user;
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const closeMenu = () => {
     setMenuOpen(false);
-  }
+  };
+
+  // Better Auth Logout
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+
+      const { error } = await authClient.signOut();
+
+      if (error) {
+        toast.error(error.message || "Logout failed. Please try again.");
+        return;
+      }
+
+      toast.success("Logged out successfully!");
+
+      closeMenu();
+      router.push("/login");
+      router.refresh();
+    } catch (error) {
+      console.error("Logout Error:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 text-foreground shadow-sm backdrop-blur-xl">
@@ -103,21 +141,16 @@ function HeaderContent() {
         <div className="hidden shrink-0 items-center gap-2 lg:flex">
           <ThemeToggle />
 
-          <Link
-            href="/login"
-            className="inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <LogIn aria-hidden="true" />
-            Login
-          </Link>
-
-          <Link
-            href="/signup"
-            className="inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <UserPlus aria-hidden="true" />
-            Register
-          </Link>
+          {!isPending &&
+            (user ? (
+              <UserMenu
+                user={user}
+                onLogout={handleLogout}
+                isLoggingOut={isLoggingOut}
+              />
+            ) : (
+              <AuthButtons />
+            ))}
         </div>
 
         {/* Mobile Actions */}
@@ -172,28 +205,63 @@ function HeaderContent() {
               );
             })}
 
+            {/* Mobile Auth Actions */}
             <div className="mt-3 flex flex-col gap-2 border-t border-border pt-4">
-              <Link
-                href="/login"
-                onClick={closeMenu}
-                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-8 text-sm font-medium transition-colors hover:bg-accent"
-              >
-                <LogIn aria-hidden="true" />
-                Login
-              </Link>
-
-              <Link
-                href="/signup"
-                onClick={closeMenu}
-                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                <UserPlus aria-hidden="true" />
-                Register
-              </Link>
+              {!isPending &&
+                (user ? (
+                  <UserMenu
+                    user={user}
+                    onLogout={handleLogout}
+                    isLoggingOut={isLoggingOut}
+                    mobile
+                  />
+                ) : (
+                  <AuthButtons
+                    mobile
+                    onClick={closeMenu}
+                  />
+                ))}
             </div>
           </nav>
         </div>
       )}
     </header>
+  );
+}
+
+/* Login and Register Buttons */
+function AuthButtons({
+  mobile = false,
+  onClick,
+}: {
+  mobile?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <>
+      <Link
+        href="/login"
+        onClick={onClick}
+        className={cn(
+          "inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+          mobile && "w-full"
+        )}
+      >
+        <LogIn size={16} aria-hidden="true" />
+        Login
+      </Link>
+
+      <Link
+        href="/signup"
+        onClick={onClick}
+        className={cn(
+          "inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90",
+          mobile && "w-full"
+        )}
+      >
+        <UserPlus size={16} aria-hidden="true" />
+        Register
+      </Link>
+    </>
   );
 }
