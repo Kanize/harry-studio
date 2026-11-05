@@ -6,6 +6,7 @@ import "./globals.css";
 import ThemeProvider from "@/components/providers/ThemeProvider";
 import SiteHeader from "@/components/layout/site-header";
 import Footer from "@/components/layout/Footer";
+import { Toaster } from "sonner";
 
 
 const manrope = Manrope({
@@ -38,6 +39,7 @@ export default function RootLayout({
           <SiteHeader />
           {children}
           <Footer/>
+          <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>
     </html>
