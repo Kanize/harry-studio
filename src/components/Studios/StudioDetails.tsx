@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import type { FormEvent, ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,14 +13,30 @@ import {
   Check,
   Clock,
   MapPin,
+  Pencil,
   ShieldCheck,
   Star,
+  Trash2,
   Users,
   X,
 } from "lucide-react";
 import type { Istudio } from "../../type/StudioType";
 
-export default function StudioDetails({ studio }: { studio: Istudio }) {
+type StudioDetailsProps = {
+  studio: Istudio;
+  currentUserEmail?: string;
+};
+
+export default function StudioDetails({
+  studio,
+  currentUserEmail,
+}: StudioDetailsProps) {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const isOwner =
+    Boolean(currentUserEmail) &&
+    currentUserEmail?.trim().toLowerCase() ===
+      studio.hostEmail?.trim().toLowerCase();
   const [activeImage, setActiveImage] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingDate, setBookingDate] = useState("");
@@ -60,6 +78,50 @@ export default function StudioDetails({ studio }: { studio: Istudio }) {
   const subtotal = hourlyRate * hours;
   const deposit = Number(studio.securityDeposit) || 0;
   const total = subtotal + deposit;
+
+  async function handleDeleteStudio() {
+    if (!studio._id) {
+      toast.error("Studio ID is missing.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${studio.title}"? This action cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setIsDeleting(true);
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+      const response = await fetch(
+        `${apiUrl}/studios/${encodeURIComponent(studio._id)}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to delete studio.");
+      }
+
+      toast.success("Studio deleted successfully!");
+      router.push("/my-listings");
+      router.refresh();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Something went wrong."
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   function handleBookingSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -113,7 +175,29 @@ export default function StudioDetails({ studio }: { studio: Istudio }) {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            {isOwner && (
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/studios/edit/${studio._id}`}
+                  className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold transition hover:border-primary hover:bg-primary/10"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleDeleteStudio}
+                  disabled={isDeleting}
+                  className="inline-flex items-center gap-2 rounded-xl border border-red-500/30 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {isDeleting ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
             <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
             <span className="font-semibold">
               {averageRating != null && Number.isFinite(Number(averageRating))
@@ -123,6 +207,7 @@ export default function StudioDetails({ studio }: { studio: Istudio }) {
             <span className="text-sm text-muted-foreground">
               ({reviews.length} reviews)
             </span>
+            </div>
           </div>
         </div>
 
