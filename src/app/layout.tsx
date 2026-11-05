@@ -5,6 +5,7 @@ import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/providers/ThemeProvider";
 import SiteHeader from "@/components/layout/site-header";
+import Footer from "@/components/layout/Footer";
 
 
 const manrope = Manrope({
@@ -36,6 +37,7 @@ export default function RootLayout({
         <ThemeProvider>
           <SiteHeader />
           {children}
+          <Footer/>
         </ThemeProvider>
       </body>
     </html>

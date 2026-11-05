@@ -1,5 +1,5 @@
 import AddStudioForm from '@/components/Studios/AddStudioForm';
-import React from 'react';
+
 
 const AddStudioPage = () => {
     return (

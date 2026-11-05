@@ -1,7 +1,7 @@
-
 "use client";
 
 import { useState } from "react";
+import type { FormEvent, ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -16,21 +16,27 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { Istudio } from "../../type/StudioType";
+import type { Istudio } from "../../type/StudioType";
 
-
-
-
-export default function StudioDetails({
-  studio,
-}: {
-  studio: Istudio;
-}) {
+export default function StudioDetails({ studio }: { studio: Istudio }) {
   const [activeImage, setActiveImage] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingDate, setBookingDate] = useState("");
   const [startTime, setStartTime] = useState("10:00");
   const [hours, setHours] = useState(2);
+  const [minDate, setMinDate] = useState("");
+
+  // Calculate the minimum date when booking is opened to avoid render-time Date() warnings.
+  function openBooking() {
+    const today = new Date();
+    const formattedDate = [
+      today.getFullYear(),
+      String(today.getMonth() + 1).padStart(2, "0"),
+      String(today.getDate()).padStart(2, "0"),
+    ].join("-");
+    setMinDate(formattedDate);
+    setBookingOpen(true);
+  }
 
   const gallery = Array.from(
     new Set(
@@ -45,37 +51,38 @@ export default function StudioDetails({
   const averageRating =
     studio.rating ??
     (reviews.length
-      ? reviews.reduce((total, review) => total + review.rating, 0) /
+      ? reviews.reduce((total, review) => total + Number(review.rating || 0), 0) /
         reviews.length
       : null);
 
-const hourlyRate = Number(studio.hourlyRate) || 0;
-const subtotal = hourlyRate * hours;
-const deposit = Number(studio.securityDeposit) || 0;
-const total = subtotal + deposit;
+  // MongoDB data may arrive as strings, so normalize prices before calculations.
+  const hourlyRate = Number(studio.hourlyRate) || 0;
+  const subtotal = hourlyRate * hours;
+  const deposit = Number(studio.securityDeposit) || 0;
+  const total = subtotal + deposit;
 
-  const today = new Date();
-  const minDate = [
-    today.getFullYear(),
-    String(today.getMonth() + 1).padStart(2, "0"),
-    String(today.getDate()).padStart(2, "0"),
-  ].join("-");
-
-  function openBooking() {
-    setBookingOpen(true);
-  }
-
-  function handleBookingSubmit(
-    event: React.FormEvent<HTMLFormElement>
-  ) {
+  function handleBookingSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    // UI only: connect this to your booking API later.
+    if (!bookingDate) {
+      alert("Please select a booking date.");
+      return;
+    }
+
+    // UI preview only. Connect this handler to the booking API later.
     alert(
-      `Booking request prepared for ${studio.title} on ${bookingDate} at ${startTime} for ${hours} hours. Total: $${total}.`
+      `Booking request prepared for ${studio.title} on ${bookingDate} at ${startTime} for ${hours} hours. Total: $${total.toFixed(2)}.`
     );
 
     setBookingOpen(false);
+  }
+
+  function showPreviousImage() {
+    setActiveImage((current) => (current - 1 + gallery.length) % gallery.length);
+  }
+
+  function showNextImage() {
+    setActiveImage((current) => (current + 1) % gallery.length);
   }
 
   return (
@@ -109,8 +116,8 @@ const total = subtotal + deposit;
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
             <span className="font-semibold">
-              {averageRating != null
-                ? averageRating.toFixed(1)
+              {averageRating != null && Number.isFinite(Number(averageRating))
+                ? Number(averageRating).toFixed(1)
                 : "New"}
             </span>
             <span className="text-sm text-muted-foreground">
@@ -121,7 +128,7 @@ const total = subtotal + deposit;
 
         {/* Gallery */}
         <section className="mb-12">
-          {gallery.length > 0 ? (
+          {gallery.length > 0 && currentImage ? (
             <>
               <div className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-muted sm:aspect-[2/1]">
                 <Image
@@ -138,12 +145,7 @@ const total = subtotal + deposit;
                     <button
                       type="button"
                       aria-label="Previous image"
-                      onClick={() =>
-                        setActiveImage(
-                          (activeImage - 1 + gallery.length) %
-                            gallery.length
-                        )
-                      }
+                      onClick={showPreviousImage}
                       className="absolute left-4 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-white backdrop-blur transition hover:bg-black/80"
                     >
                       <ArrowLeft className="h-5 w-5" />
@@ -152,11 +154,7 @@ const total = subtotal + deposit;
                     <button
                       type="button"
                       aria-label="Next image"
-                      onClick={() =>
-                        setActiveImage(
-                          (activeImage + 1) % gallery.length
-                        )
-                      }
+                      onClick={showNextImage}
                       className="absolute right-4 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-white backdrop-blur transition hover:bg-black/80"
                     >
                       <ArrowRight className="h-5 w-5" />
@@ -174,9 +172,10 @@ const total = subtotal + deposit;
                   {gallery.map((image, index) => (
                     <button
                       type="button"
-                      key={image}
+                      key={`${image}-${index}`}
                       onClick={() => setActiveImage(index)}
                       aria-label={`Show image ${index + 1}`}
+                      aria-pressed={activeImage === index}
                       className={`relative h-20 w-28 shrink-0 overflow-hidden rounded-xl border-2 transition ${
                         activeImage === index
                           ? "border-primary"
@@ -206,9 +205,7 @@ const total = subtotal + deposit;
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_350px]">
           <div className="space-y-10">
             <section>
-              <h2 className="text-2xl font-bold">
-                About this workspace
-              </h2>
+              <h2 className="text-2xl font-bold">About this workspace</h2>
               <p className="mt-4 whitespace-pre-line leading-8 text-muted-foreground">
                 {studio.overview ||
                   "Studio details will be added by the host."}
@@ -216,20 +213,18 @@ const total = subtotal + deposit;
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold">
-                Workspace specifications
-              </h2>
+              <h2 className="text-2xl font-bold">Workspace specifications</h2>
 
               <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Specification
                   icon={<Clock className="h-5 w-5" />}
                   label="Hourly rate"
-                  value={`$${studio.hourlyRate} / hour`}
+                  value={`$${hourlyRate.toFixed(2)} / hour`}
                 />
                 <Specification
                   icon={<ShieldCheck className="h-5 w-5" />}
                   label="Security deposit"
-                  value={`$${deposit}`}
+                  value={`$${deposit.toFixed(2)}`}
                 />
                 <Specification
                   icon={<Users className="h-5 w-5" />}
@@ -249,9 +244,7 @@ const total = subtotal + deposit;
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold">
-                Amenities & facilities
-              </h2>
+              <h2 className="text-2xl font-bold">Amenities & facilities</h2>
 
               {studio.amenities?.length ? (
                 <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -294,17 +287,15 @@ const total = subtotal + deposit;
               </div>
 
               <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                Contact information is displayed when supplied by the
-                studio host.
+                Contact information is displayed when supplied by the studio
+                host.
               </p>
             </section>
 
             {/* Reviews */}
             <section>
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-2xl font-bold">
-                  Guest reviews
-                </h2>
+                <h2 className="text-2xl font-bold">Guest reviews</h2>
                 <span className="text-sm text-muted-foreground">
                   {reviews.length} reviews
                 </span>
@@ -321,7 +312,7 @@ const total = subtotal + deposit;
                         <p className="font-semibold">{review.name}</p>
                         <span className="flex items-center gap-1 text-sm">
                           <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                          {review.rating.toFixed(1)}
+                          {Number(review.rating || 0).toFixed(1)}
                         </span>
                       </div>
                       <p className="mt-3 text-sm leading-6 text-muted-foreground">
@@ -351,7 +342,7 @@ const total = subtotal + deposit;
               </p>
 
               <p className="mt-2 text-3xl font-bold">
-                ${studio.hourlyRate}
+                ${hourlyRate.toFixed(2)}
                 <span className="text-base font-normal text-muted-foreground">
                   {" "}/ hour
                 </span>
@@ -362,7 +353,7 @@ const total = subtotal + deposit;
                   <span className="text-muted-foreground">
                     Security deposit
                   </span>
-                  <span className="font-medium">${deposit}</span>
+                  <span className="font-medium">${deposit.toFixed(2)}</span>
                 </div>
 
                 <div className="flex justify-between gap-3 text-sm">
@@ -413,10 +404,7 @@ const total = subtotal + deposit;
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                   Reservation
                 </p>
-                <h2
-                  id="booking-title"
-                  className="mt-2 text-2xl font-bold"
-                >
+                <h2 id="booking-title" className="mt-2 text-2xl font-bold">
                   Book your workspace
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -434,10 +422,7 @@ const total = subtotal + deposit;
               </button>
             </div>
 
-            <form
-              onSubmit={handleBookingSubmit}
-              className="mt-7 space-y-5"
-            >
+            <form onSubmit={handleBookingSubmit} className="mt-7 space-y-5">
               <div>
                 <label
                   htmlFor="booking-date"
@@ -450,12 +435,10 @@ const total = subtotal + deposit;
                   <input
                     id="booking-date"
                     type="date"
-                    min={minDate}
+                    min={minDate || undefined}
                     required
                     value={bookingDate}
-                    onChange={(event) =>
-                      setBookingDate(event.target.value)
-                    }
+                    onChange={(event) => setBookingDate(event.target.value)}
                     className="h-12 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none focus:border-primary"
                   />
                 </div>
@@ -474,9 +457,7 @@ const total = subtotal + deposit;
                     type="time"
                     required
                     value={startTime}
-                    onChange={(event) =>
-                      setStartTime(event.target.value)
-                    }
+                    onChange={(event) => setStartTime(event.target.value)}
                     className="h-12 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary"
                   />
                 </div>
@@ -491,9 +472,7 @@ const total = subtotal + deposit;
                   <select
                     id="booking-hours"
                     value={hours}
-                    onChange={(event) =>
-                      setHours(Number(event.target.value))
-                    }
+                    onChange={(event) => setHours(Number(event.target.value))}
                     className="h-12 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary"
                   >
                     {[1, 2, 3, 4, 5, 6, 8, 10, 12].map((hour) => (
@@ -508,7 +487,7 @@ const total = subtotal + deposit;
               <div className="space-y-3 rounded-xl bg-muted/60 p-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">
-                    ${studio.hourlyRate} × {hours} hours
+                    ${hourlyRate.toFixed(2)} × {hours} hours
                   </span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
@@ -517,7 +496,7 @@ const total = subtotal + deposit;
                   <span className="text-muted-foreground">
                     Security deposit
                   </span>
-                  <span>${studio.securityDeposit.toFixed(2)}</span>
+                  <span>${deposit.toFixed(2)}</span>
                 </div>
 
                 <div className="flex justify-between border-t border-border pt-3 font-bold">
@@ -534,8 +513,8 @@ const total = subtotal + deposit;
               </button>
 
               <p className="text-center text-xs leading-5 text-muted-foreground">
-                This is a booking preview. Availability and final charges
-                must be verified by the booking service.
+                This is a booking preview. Availability and final charges must
+                be verified by the booking service.
               </p>
             </form>
           </section>
@@ -550,7 +529,7 @@ function Specification({
   label,
   value,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   value: string;
 }) {
@@ -561,9 +540,7 @@ function Specification({
       </div>
       <div className="min-w-0">
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="mt-1 break-words text-sm font-semibold">
-          {value}
-        </p>
+        <p className="mt-1 break-words text-sm font-semibold">{value}</p>
       </div>
     </div>
   );

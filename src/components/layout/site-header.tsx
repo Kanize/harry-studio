@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -12,15 +12,13 @@ import {
   X,
 } from "lucide-react";
 
-
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/utils";
-
 
 const navLinks = [
   { label: "Home", href: "/" },
   { label: "Explore Studios", href: "/studios" },
-  { label: "Add Studio", href: "/studios/addStudio" },
+  { label: "Add Studio", href: "/addStudio" },
   { label: "How It Works", href: "/#how-it-works" },
   { label: "About Us", href: "/#about" },
 ] as const;
@@ -33,6 +31,20 @@ function isLinkActive(pathname: string, href: string) {
 }
 
 export default function SiteHeader() {
+  return (
+    <Suspense fallback={<HeaderFallback />}>
+      <HeaderContent />
+    </Suspense>
+  );
+}
+
+function HeaderFallback() {
+  return (
+    <header className="sticky top-0 z-50 h-16 border-b border-border bg-background/90 backdrop-blur-xl" />
+  );
+}
+
+function HeaderContent() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -43,6 +55,7 @@ export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 text-foreground shadow-sm backdrop-blur-xl">
       <div className="studio-container flex h-16 items-center justify-between gap-4">
+
         {/* Logo */}
         <Link
           href="/"
@@ -50,13 +63,8 @@ export default function SiteHeader() {
           className="group flex shrink-0 items-center gap-2.5"
           aria-label="StudioSpace home"
         >
-          
           <span className="flex size-9 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
-            <Aperture
-              size={20}
-              strokeWidth={2.25}
-              aria-hidden="true"
-            />
+            <Aperture size={20} strokeWidth={2.25} aria-hidden="true" />
           </span>
 
           <span className="font-heading text-lg font-bold tracking-tight">
@@ -99,16 +107,16 @@ export default function SiteHeader() {
             href="/login"
             className="inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-              <LogIn aria-hidden="true" />
-              Login
+            <LogIn aria-hidden="true" />
+            Login
           </Link>
 
           <Link
             href="/register"
             className="inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-              <UserPlus aria-hidden="true" />
-              Register
+            <UserPlus aria-hidden="true" />
+            Register
           </Link>
         </div>
 
@@ -168,19 +176,19 @@ export default function SiteHeader() {
               <Link
                 href="/login"
                 onClick={closeMenu}
-                className="inline-flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-8 text-sm font-medium transition-colors hover:bg-accent"
               >
-                  <LogIn aria-hidden="true" />
-                  Login
+                <LogIn aria-hidden="true" />
+                Login
               </Link>
 
               <Link
                 href="/register"
                 onClick={closeMenu}
-                className="inline-flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
-                  <UserPlus aria-hidden="true" />
-                  Register
+                <UserPlus aria-hidden="true" />
+                Register
               </Link>
             </div>
           </nav>
