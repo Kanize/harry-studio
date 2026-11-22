@@ -73,20 +73,18 @@ export function LoginForm({
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      setIsGoogleLoading(true);
+const handleGoogleAuth = async () => {
+  try {
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/auth/success",
+    });
+  } catch (error) {
+    console.error("Google Authentication Error:", error);
+    toast.error("Google authentication failed. Please try again.");
+  }
+};
 
-      await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/",
-      });
-    } catch (error) {
-      console.error("Google Login Error:", error);
-      toast.error("Google login failed. Please try again.");
-      setIsGoogleLoading(false);
-    }
-  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -142,7 +140,7 @@ export function LoginForm({
                 <Button
                   variant="outline"
                   type="button"
-                  onClick={handleGoogleLogin}
+                  onClick={handleGoogleAuth}
                   disabled={isLoading || isGoogleLoading}
                 >
                   {isGoogleLoading ? "Redirecting..." : "Login with Google"}
