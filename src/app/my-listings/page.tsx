@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -15,13 +14,14 @@ import {
   Loader2,
   ImageIcon,
   X,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
+import { Button } from "@/components/ui/button";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 interface Studio {
   _id: string;
@@ -37,15 +37,12 @@ interface Studio {
 
 export default function MyListingsPage() {
   const router = useRouter();
-  const { data: session, isPending: sessionLoading } =
-    authClient.useSession();
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
 
   const [studios, setStudios] = useState<Studio[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
-  const [selectedStudio, setSelectedStudio] = useState<Studio | null>(
-    null
-  );
+  const [selectedStudio, setSelectedStudio] = useState<Studio | null>(null);
 
   const fetchMyListings = useCallback(async () => {
     try {
@@ -71,15 +68,13 @@ export default function MyListingsPage() {
 
       const listings: Studio[] = Array.isArray(result)
         ? result
-        : result.data ?? result.studios ?? result.listings ?? [];
+        : (result.data ?? result.studios ?? result.listings ?? []);
 
       setStudios(listings);
     } catch (error) {
       console.error("My listings error:", error);
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong."
+        error instanceof Error ? error.message : "Something went wrong.",
       );
     } finally {
       setLoading(false);
@@ -107,26 +102,19 @@ export default function MyListingsPage() {
     try {
       setDeleting(true);
 
-      const response = await fetch(
-        `${API_URL}/studios/${selectedStudio._id}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${API_URL}/studios/${selectedStudio._id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
       const result = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(
-          result?.message || "Failed to delete studio."
-        );
+        throw new Error(result?.message || "Failed to delete studio.");
       }
 
       setStudios((previous) =>
-        previous.filter(
-          (studio) => studio._id !== selectedStudio._id
-        )
+        previous.filter((studio) => studio._id !== selectedStudio._id),
       );
 
       setSelectedStudio(null);
@@ -136,7 +124,7 @@ export default function MyListingsPage() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Could not delete this listing."
+          : "Could not delete this listing.",
       );
     } finally {
       setDeleting(false);
@@ -209,13 +197,11 @@ export default function MyListingsPage() {
               <Building2 className="h-8 w-8 text-muted-foreground" />
             </div>
 
-            <h2 className="text-xl font-semibold">
-              No studio listings yet
-            </h2>
+            <h2 className="text-xl font-semibold">No studio listings yet</h2>
 
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              You haven&apos;t added any studios. Create your first listing
-              and start welcoming creative professionals.
+              You haven&apos;t added any studios. Create your first listing and
+              start welcoming creative professionals.
             </p>
 
             <Link
@@ -350,9 +336,7 @@ export default function MyListingsPage() {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <h3 className="truncate font-semibold">
-                        {studio.title}
-                      </h3>
+                      <h3 className="truncate font-semibold">{studio.title}</h3>
 
                       <p className="mt-1 text-xs text-muted-foreground">
                         {studio.category}
@@ -373,12 +357,11 @@ export default function MyListingsPage() {
                   </div>
 
                   <div className="mt-4 flex gap-2">
-                    <Link
-                      href={`/studios/edit/${studio._id}`}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition hover:bg-muted"
-                    >
-                      <Edit className="h-4 w-4" />
-                      Edit
+                    <Link href={`/studios/edit/${studio._id}`}>
+                      <Button variant="outline">
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                      </Button>
                     </Link>
 
                     <button
@@ -437,10 +420,7 @@ export default function MyListingsPage() {
               </button>
             </div>
 
-            <h2
-              id="delete-dialog-title"
-              className="text-xl font-bold"
-            >
+            <h2 id="delete-dialog-title" className="text-xl font-bold">
               Delete this studio?
             </h2>
 
