@@ -131,7 +131,7 @@ const handleGoogleAuth = async () => {
                 required
               />
               <FieldDescription>
-                We'll use this to contact you. We will not share your email
+                We&apos;ll use this to contact you. We will not share your email
                 with anyone else.
               </FieldDescription>
             </Field>

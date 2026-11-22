@@ -1,6 +1,5 @@
-
 "use client";
-
+import { authClient } from "@/lib/auth-client";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -70,15 +69,14 @@ const initialForm: StudioFormData = {
 
 export default function AddStudioForm() {
   const router = useRouter();
+
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
+
+  const user = session?.user;
+
   const [form, setForm] = useState<StudioFormData>(initialForm);
   const [imageError, setImageError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  // Replace these demo values with the authenticated Better Auth user.
-  const user = {
-    name: "Studio Host",
-    email: "host@example.com",
-  };
 
   function updateField<K extends keyof StudioFormData>(
     field: K,
@@ -101,13 +99,14 @@ export default function AddStudioForm() {
 
     if (submitting) return;
 
-    if (form.amenities.length === 0) {
-      toast.error("Select at least one amenity.");
+    if (sessionLoading) {
+      toast.error("Please wait while your account is loading.");
       return;
     }
 
-    if (imageError) {
-      toast.error("Please provide a valid studio image URL.");
+    if (!user) {
+      toast.error("Please login before publishing a studio.");
+      router.push("/login");
       return;
     }
 
@@ -135,16 +134,16 @@ export default function AddStudioForm() {
         hourlyRate,
         securityDeposit,
         maxCapacity,
-        hostName: user.name,
-        hostEmail: user.email,
       };
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
       const response = await fetch(`${apiUrl}/add-studio`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
@@ -152,7 +151,8 @@ export default function AddStudioForm() {
 
       if (!response.ok || !data?.success) {
         throw new Error(
-          data?.message || `Unable to publish studio (HTTP ${response.status}).`
+          data?.message ||
+            `Unable to publish studio (HTTP ${response.status}).`,
         );
       }
 
@@ -167,7 +167,7 @@ export default function AddStudioForm() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Something went wrong. Please try again."
+          : "Something went wrong. Please try again.",
       );
     } finally {
       setSubmitting(false);
@@ -259,9 +259,7 @@ export default function AddStudioForm() {
                     className={inputClass}
                     placeholder="e.g. 10 people"
                     value={form.maxCapacity}
-                    onChange={(e) =>
-                      updateField("maxCapacity", e.target.value)
-                    }
+                    onChange={(e) => updateField("maxCapacity", e.target.value)}
                     required
                   />
                 </div>
@@ -465,8 +463,9 @@ export default function AddStudioForm() {
                     Host Name
                   </label>
                   <input
-                    value={user.name}
+                    value={user?.name || ""}
                     readOnly
+                    placeholder="Loading host name..."
                     className={`${inputClass} cursor-not-allowed opacity-75`}
                   />
                 </div>
@@ -476,8 +475,9 @@ export default function AddStudioForm() {
                   </label>
                   <input
                     type="email"
-                    value={user.email}
+                    value={user?.email || ""}
                     readOnly
+                    placeholder="Loading host email..."
                     className={`${inputClass} cursor-not-allowed opacity-75`}
                   />
                 </div>
@@ -488,11 +488,16 @@ export default function AddStudioForm() {
             <div className="border-t border-border pt-6">
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || sessionLoading || !user}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/10 transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-64"
               >
-                {submitting ? "Publishing..." : "Publish Studio Listing"}
-                {!submitting && <ArrowRight size={17} />}
+                {submitting
+                  ? "Publishing..."
+                  : sessionLoading
+                    ? "Checking Account..."
+                    : "Publish Studio Listing"}
+
+                {!submitting && !sessionLoading && <ArrowRight size={17} />}
               </button>
               <p className="mt-3 text-xs leading-5 text-muted-foreground">
                 By publishing, you confirm that your studio details and
