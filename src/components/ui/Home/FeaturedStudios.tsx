@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, MapPin, Star } from "lucide-react";
@@ -13,19 +14,27 @@ interface Studio {
   createdAt?: string;
 }
 
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 async function getFeaturedStudios(): Promise<Studio[]> {
   try {
-    const res = await fetch("http://localhost:8000/featured-studios", {
+    const res = await fetch(`${API_URL}/featured-studios`, {
       cache: "no-store",
     });
 
     if (!res.ok) {
-      throw new Error("Failed to fetch featured studios");
+      throw new Error(`Failed to fetch featured studios: ${res.status}`);
     }
 
     const data = await res.json();
 
-    return data.studios ?? [];
+    // Supports both array and object responses
+    const studios = Array.isArray(data)
+      ? data
+      : data?.studios ?? [];
+
+    return Array.isArray(studios) ? studios : [];
   } catch (error) {
     console.error("Featured Studios Fetch Error:", error);
     return [];
@@ -38,7 +47,6 @@ export default async function FeaturedStudios() {
   return (
     <section className="bg-background px-5 py-20 sm:px-8 lg:px-10">
       <div className="mx-auto max-w-7xl">
-
         {/* Section Heading */}
         <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
@@ -71,9 +79,18 @@ export default async function FeaturedStudios() {
             <h3 className="text-lg font-semibold text-foreground">
               No featured studios yet
             </h3>
+
             <p className="mt-2 text-sm text-muted-foreground">
               Amazing creative spaces will appear here soon.
             </p>
+
+            <Link
+              href="/studios"
+              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#65B800] hover:underline"
+            >
+              Explore all studios
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
@@ -91,7 +108,7 @@ export default async function FeaturedStudios() {
                     {studio.imageUrl ? (
                       <Image
                         src={studio.imageUrl}
-                        alt={studio.title}
+                        alt={studio.title || "Studio"}
                         fill
                         unoptimized
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -128,6 +145,7 @@ export default async function FeaturedStudios() {
                       </span>
                     </div>
 
+                    {/* Price and Details */}
                     <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
                       <div>
                         <p className="text-xs text-muted-foreground">
