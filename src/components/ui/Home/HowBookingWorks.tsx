@@ -8,8 +8,6 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-
 const bookingSteps = [
   {
     number: "01",
@@ -64,8 +62,9 @@ export default function HowBookingWorks() {
           </h2>
 
           <p className="mt-5 text-sm leading-7 text-muted-foreground sm:text-base">
-            Your next creative project starts here. Find the perfect space,
-            book your time, and bring your ideas to life in four simple steps.
+            Your next creative project starts here. Find the perfect
+            space, book your time, and bring your ideas to life in
+            four simple steps.
           </p>
         </div>
 
@@ -82,7 +81,11 @@ export default function HowBookingWorks() {
                 {/* Step Number and Icon */}
                 <div className="mb-7 flex items-start justify-between">
                   <div className="flex size-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
-                    <Icon size={26} strokeWidth={1.8} aria-hidden="true" />
+                    <Icon
+                      size={26}
+                      strokeWidth={1.8}
+                      aria-hidden="true"
+                    />
                   </div>
 
                   <span className="font-heading text-3xl font-bold text-muted-foreground/30 transition-colors group-hover:text-primary/50">
@@ -90,6 +93,7 @@ export default function HowBookingWorks() {
                   </span>
                 </div>
 
+                {/* Step Content */}
                 <h3 className="font-heading text-xl font-semibold tracking-tight">
                   {step.title}
                 </h3>
@@ -98,10 +102,10 @@ export default function HowBookingWorks() {
                   {step.description}
                 </p>
 
-                {/* Small step indicator */}
+                {/* Step Indicator */}
                 <div className="mt-7 h-1 w-10 rounded-full bg-primary/30 transition-all duration-300 group-hover:w-16 group-hover:bg-primary" />
 
-                {/* Connector arrow on desktop */}
+                {/* Connector Arrow */}
                 {index < bookingSteps.length - 1 && (
                   <ArrowRight
                     aria-hidden="true"
@@ -119,16 +123,16 @@ export default function HowBookingWorks() {
             Your next great project is one booking away.
           </p>
 
-          <Button
-            asChild
-            size="lg"
-            className="bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
+          <Link
+            href="/studios"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
-            <Link href="/studios">
-              Explore Studios
-              <ArrowRight className="ml-1 size-4" aria-hidden="true" />
-            </Link>
-          </Button>
+            Explore Studios
+            <ArrowRight
+              className="size-4"
+              aria-hidden="true"
+            />
+          </Link>
         </div>
       </div>
     </section>

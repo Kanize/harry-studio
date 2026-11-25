@@ -1,7 +1,6 @@
 
 import Link from "next/link";
 import {
-  ArrowLeft,
   ArrowUpRight,
   Aperture,
   Camera,
@@ -18,13 +17,13 @@ export default function NotFound() {
         <div className="absolute -left-40 -top-40 h-96 w-96 rounded-full bg-[#C8FF00]/10 blur-[100px]" />
         <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-[#C8FF00]/10 blur-[100px]" />
 
-        <div className="absolute inset-0 opacity-[0.035] bg-[linear-gradient(to_right,#888_1px,transparent_1px),linear-gradient(to_bottom,#888_1px,transparent_1px)] [background-size:40px_40px]" />
+        <div className="absolute inset-0 opacity-[0.035] bg-[linear-gradient(to_right,#888_1px,transparent_1px),linear-gradient(to_bottom,#888_1px,transparent_1px)] bg-size-[40px_40px]" />
       </div>
 
       <div className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
         {/* Illustration */}
         <div className="relative mx-auto w-full max-w-130">
-          <div className="absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#C8FF00]/10 blur-3xl" />
+          <div className="absolute left-1/2 top-1/2 h-75 w-75 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#C8FF00]/10 blur-3xl" />
 
           <div className="relative rounded-4xl border border-border bg-card/70 p-5 shadow-2xl backdrop-blur-sm sm:p-8">
             <div className="mb-6 flex items-center justify-between">

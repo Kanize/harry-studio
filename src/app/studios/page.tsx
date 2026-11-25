@@ -49,7 +49,7 @@ function StudiosLoading() {
             key={index}
             className="overflow-hidden rounded-2xl border border-border"
           >
-            <div className="aspect-[4/3] animate-pulse bg-muted" />
+            <div className="aspect-4/3 animate-pulse bg-muted" />
 
             <div className="space-y-4 p-5">
               <div className="h-5 w-3/4 animate-pulse rounded bg-muted" />

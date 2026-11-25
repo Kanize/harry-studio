@@ -280,7 +280,7 @@ export default function MyBookingsPage() {
             </h2>
 
             <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
-              You haven't made any studio reservations yet.
+              You haven&apos;t made any studio reservations yet.
               Explore our studios and book your perfect workspace.
             </p>
 
@@ -301,7 +301,7 @@ export default function MyBookingsPage() {
               >
                 <div className="flex flex-col md:flex-row">
                   {/* Studio Image */}
-                  <div className="relative h-56 w-full shrink-0 bg-muted md:min-h-[260px] md:w-64">
+                  <div className="relative h-56 w-full shrink-0 bg-muted md:min-h-65 md:w-64">
                     {booking.studioImage ? (
                       <Image
                         src={booking.studioImage}

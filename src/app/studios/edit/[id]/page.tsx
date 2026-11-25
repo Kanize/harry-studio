@@ -135,7 +135,10 @@ export default function EditStudioPage() {
   useEffect(() => {
     if (sessionLoading) return;
 
-    if (!session?.user) {
+    // Capture and verify the authenticated user.
+    const user = session?.user;
+
+    if (!user) {
       router.replace("/login");
       return;
     }
@@ -166,7 +169,7 @@ export default function EditStudioPage() {
         }
 
         const studio: Studio =
-          data.studio || data.data || data;
+          data.studio || data.data?.studio || data;
 
         if (!studio?._id) {
           throw new Error("Studio information was not found.");
@@ -188,8 +191,9 @@ export default function EditStudioPage() {
           overview: studio.overview || "",
         });
 
-        setHostName(studio.hostName || session.user.name || "");
-        setHostEmail(studio.hostEmail || session.user.email || "");
+        // Read-only host information
+        setHostName(studio.hostName || user?.name || "");
+        setHostEmail(studio.hostEmail || user?.email || "");
       } catch (error) {
         console.error("Fetch Studio Error:", error);
 
@@ -214,12 +218,7 @@ export default function EditStudioPage() {
     return () => {
       cancelled = true;
     };
-  }, [
-    studioId,
-    sessionLoading,
-    session,
-    router,
-  ]);
+  }, [studioId, sessionLoading, session, router]);
 
   // Update studio
   async function handleSubmit(
@@ -251,7 +250,9 @@ export default function EditStudioPage() {
       !Number.isInteger(maxCapacity) ||
       maxCapacity < 1
     ) {
-      toast.error("Please enter valid pricing and capacity details.");
+      toast.error(
+        "Please enter valid pricing and capacity details."
+      );
       return;
     }
 
@@ -314,6 +315,7 @@ export default function EditStudioPage() {
       <section className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+
           <p className="mt-4 text-sm text-muted-foreground">
             Loading studio information...
           </p>
@@ -328,7 +330,7 @@ export default function EditStudioPage() {
     <section className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6 lg:py-16">
       <div className="mx-auto max-w-5xl">
 
-        {/* Back button */}
+        {/* Back Button */}
         <button
           type="button"
           onClick={() => router.push("/my-listings")}
@@ -366,7 +368,10 @@ export default function EditStudioPage() {
             {/* Studio Details */}
             <div>
               <div className="mb-5">
-                <h2 className="text-lg font-bold">Studio Details</h2>
+                <h2 className="text-lg font-bold">
+                  Studio Details
+                </h2>
+
                 <p className="mt-1 text-sm text-muted-foreground">
                   Update the basic information about your studio.
                 </p>
@@ -375,7 +380,8 @@ export default function EditStudioPage() {
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                   <label className={labelClass} htmlFor="title">
-                    Studio Title <span className="text-primary">*</span>
+                    Studio Title{" "}
+                    <span className="text-primary">*</span>
                   </label>
 
                   <input
@@ -394,7 +400,8 @@ export default function EditStudioPage() {
 
                 <div>
                   <label className={labelClass} htmlFor="category">
-                    Category <span className="text-primary">*</span>
+                    Category{" "}
+                    <span className="text-primary">*</span>
                   </label>
 
                   <select
@@ -511,6 +518,7 @@ export default function EditStudioPage() {
                   <MapPin size={16} className="text-primary" />
                   Location / Full Address
                 </span>
+
                 <span className="text-primary"> *</span>
               </label>
 
@@ -535,6 +543,7 @@ export default function EditStudioPage() {
                   <ImagePlus size={16} className="text-primary" />
                   Studio Image URL
                 </span>
+
                 <span className="text-primary"> *</span>
               </label>
 
@@ -567,6 +576,7 @@ export default function EditStudioPage() {
                 ) : (
                   <div className="flex aspect-[16/5] flex-col items-center justify-center gap-2 text-muted-foreground">
                     <ImagePlus size={28} />
+
                     <p className="text-sm">
                       {imageError
                         ? "Image could not be loaded. Check the URL."
