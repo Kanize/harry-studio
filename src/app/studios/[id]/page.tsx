@@ -1,4 +1,5 @@
 
+import { connection } from "next/server";
 import StudioDetails from "@/components/Studios/StudioDetails";
 import { notFound } from "next/navigation";
 import type { Istudio } from "@/type/StudioType";
@@ -15,6 +16,9 @@ const API_URL =
 export default async function StudioDetailsPage({
   params,
 }: PageProps) {
+  // Wait until an incoming request before accessing dynamic data.
+  await connection();
+
   const { id } = await params;
 
   if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
@@ -27,9 +31,8 @@ export default async function StudioDetailsPage({
     res = await fetch(`${API_URL}/studios/${id}`, {
       cache: "no-store",
     });
-  } catch (error) {
-    console.error("Failed to connect to Studio API:", error);
-    throw new Error("Unable to connect to the server.");
+  } catch {
+    throw new Error("Unable to connect to the studio server.");
   }
 
   if (res.status === 404) {
@@ -37,18 +40,12 @@ export default async function StudioDetailsPage({
   }
 
   if (!res.ok) {
-    const errorData = await res.json().catch(() => null);
-
-    console.error("Studio API Error:", errorData);
-
-    throw new Error(
-      errorData?.message || "Failed to fetch studio details."
-    );
+    throw new Error("Failed to fetch studio details.");
   }
 
   const data = await res.json();
 
-  const studio: Istudio | undefined = data.studio ?? data.data?.studio ?? data;
+  const studio: Istudio = data.studio ?? data.data?.studio ?? data;
 
   if (!studio?._id) {
     notFound();

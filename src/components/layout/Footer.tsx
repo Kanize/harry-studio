@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import CurrentYear from "./CurrentYear";
 
 const quickLinks = [
   { label: "Home", href: "/" },
@@ -207,9 +208,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-16 flex flex-col gap-5 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-center text-xs text-gray-500 sm:text-left">
-            © {new Date().getFullYear()} StudioSpace. All rights reserved.
-          </p>
+          <CurrentYear /> StudioSpace. All rights reserved.
 
           <div className="flex flex-wrap items-center justify-center gap-6">
             <Link

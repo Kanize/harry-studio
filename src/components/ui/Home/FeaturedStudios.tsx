@@ -1,4 +1,5 @@
 
+import { connection } from "next/server";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, MapPin, Star } from "lucide-react";
@@ -18,21 +19,26 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 async function getFeaturedStudios(): Promise<Studio[]> {
+  // Render this data when a request comes in.
+  await connection();
+
   try {
     const res = await fetch(`${API_URL}/featured-studios`, {
       cache: "no-store",
     });
 
     if (!res.ok) {
-      throw new Error(`Failed to fetch featured studios: ${res.status}`);
+      throw new Error(
+        `Failed to fetch featured studios: ${res.status}`
+      );
     }
 
     const data = await res.json();
 
-    // Supports both array and object responses
+    // Supports array and object API responses.
     const studios = Array.isArray(data)
       ? data
-      : data?.studios ?? [];
+      : data?.studios ?? data?.data?.studios ?? [];
 
     return Array.isArray(studios) ? studios : [];
   } catch (error) {
@@ -47,6 +53,7 @@ export default async function FeaturedStudios() {
   return (
     <section className="bg-background px-5 py-20 sm:px-8 lg:px-10">
       <div className="mx-auto max-w-7xl">
+
         {/* Section Heading */}
         <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
